@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spaced Repetition Schedule</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #f4f4f4;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        strong {
+            color: #007BFF;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007BFF;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spaced Repetition Schedule</h1>
+    <ul>
+        {% for flashcard, interval in schedule %}
+        <li>
+            <strong>Review:</strong> {{ flashcard[0] }} - <strong>Interval:</strong> {{ interval }} minutes
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="/">Back</a>
+</body>
+</html>
