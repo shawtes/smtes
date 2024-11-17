@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NBA DFS Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Controls</h3>
+            <div class="control-group">
+                <button onclick="lockSelected()">Lock Selected</button>
+                <button onclick="excludeSelected()">Exclude Selected</button>
+                <button onclick="clearLocks()">Clear Locks</button>
+                <button onclick="clearExcludes()">Clear Excludes</button>
+            </div>
+            <input type="file" id="csvFile" accept=".csv" style="display: none;">
+            <button onclick="document.getElementById('csvFile').click()">Load CSV</button>
+            <button onclick="optimize()">Run Optimization</button>
+            <button onclick="saveLineups()">Save Lineups</button>
+            
+            <div class="lineup-settings">
+                <h4>Lineup Settings</h4>
+                <label>Number of Lineups:
+                    <input type="number" id="numLineups" value="1" min="1" max="150">
+                </label>
+            </div>
+            
+            <div class="stack-settings">
+                <h4>Stack Settings</h4>
+                <div id="stackOptions">
+                    <div class="stack-type">
+                        <input type="checkbox" id="no_stacks" value="No Stacks" checked>
+                        <label for="no_stacks">No Stacks</label>
+                    </div>
+                    <div class="stack-type">
+                        <input type="checkbox" id="stack_4_2_2" value="4|2|2">
+                        <label for="stack_4_2_2">4-2-2 Stack</label>
+                    </div>
+                    <div class="stack-type">
+                        <input type="checkbox" id="stack_3_3_2" value="3|3|2">
+                        <label for="stack_3_3_2">3-3-2 Stack</label>
+                    </div>
+                    <div class="stack-type">
+                        <input type="checkbox" id="stack_5_3" value="5|3">
+                        <label for="stack_5_3">5-3 Stack</label>
+                    </div>
+                    <div class="stack-type">
+                        <input type="checkbox" id="stack_4_3" value="4|3">
+                        <label for="stack_4_3">4-3 Stack</label>
+                    </div>
+                    <div class="stack-type">
+                        <input type="checkbox" id="stack_4_4" value="4|4">
+                        <label for="stack_4_4">4-4 Stack</label>
+                    </div>
+                    <div class="stack-type">
+                        <input type="checkbox" id="stack_5_2" value="5|2">
+                        <label for="stack_5_2">5-2 Stack</label>
+                    </div>
+                    <div class="stack-type">
+                        <input type="checkbox" id="stack_3_2" value="3|2">
+                        <label for="stack_3_2">3-2 Stack</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="optimization-settings">
+                <h4>Settings</h4>
+                <label>Min Points:
+                    <input type="number" id="minPoints" value="0">
+                </label>
+                <label>Min Unique:
+                    <input type="number" id="minUnique" value="0">
+                </label>
+                <div class="monte-carlo-settings">
+                    <label>Monte Carlo Iterations:
+                        <input type="number" id="monteCarloIterations" value="500">
+                    </label>
+                </div>
+            </div>
+
+            <div class="position-constraints">
+                <h4>Position Limits</h4>
+                <div id="positionLimits">
+                    <!-- Position limits will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="tabs">
+                <button onclick="showTab('players')">Players</button>
+                <button onclick="showTab('stacks')">Team Stacks</button>
+                <button onclick="showTab('results')">Results</button>
+                <button onclick="showTab('exposure')">Exposure</button>
+            </div>
+            
+            <div id="players" class="tab-content">
+                <div class="position-tabs">
+                    <button class="position-tab active" onclick="filterPosition('all')">All</button>
+                    <button class="position-tab" onclick="filterPosition('PG')">PG</button>
+                    <button class="position-tab" onclick="filterPosition('SG')">SG</button>
+                    <button class="position-tab" onclick="filterPosition('SF')">SF</button>
+                    <button class="position-tab" onclick="filterPosition('PF')">PF</button>
+                    <button class="position-tab" onclick="filterPosition('C')">C</button>
+                </div>
+                <div class="table-controls">
+                    <button onclick="selectAll('players')">Select All</button>
+                    <button onclick="deselectAll('players')">Deselect All</button>
+                </div>
+                <div class="table-container">
+                    <table id="playersTable">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Name</th>
+                                <th>Team</th>
+                                <th>Pos</th>
+                                <th>Salary</th>
+                                <th>Proj</th>
+                                <th>Min Exp</th>
+                                <th>Max Exp</th>
+                                <th class="player-status">
+                                    <span class="lock-status"></span>
+                                    <span class="exclude-status"></span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="stacks" class="tab-content">
+                <div class="stack-controls">
+                    <div class="stack-type-controls">
+                        <h4>Stack Types</h4>
+                        <div class="table-controls">
+                            <button onclick="selectAll('stack-types')">Select All</button>
+                            <button onclick="deselectAll('stack-types')">Deselect All</button>
+                        </div>
+                        <div id="stackOptions">
+                            <!-- Stack types will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="team-stack-controls">
+                        <h4>Team Stacks</h4>
+                        <div class="table-controls">
+                            <button onclick="selectAll('stacks')">Select All Teams</button>
+                            <button onclick="deselectAll('stacks')">Deselect All Teams</button>
+                        </div>
+                        <div class="stack-size-tables">
+                            <div class="stack-size-table" id="stack2">
+                                <h5>2-Player Stacks</h5>
+                                <table class="team-stack-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Team</th>
+                                            <th>Proj Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div class="stack-size-table" id="stack3">
+                                <h5>3-Player Stacks</h5>
+                                <table class="team-stack-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Team</th>
+                                            <th>Proj Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div class="stack-size-table" id="stack4">
+                                <h5>4-Player Stacks</h5>
+                                <table class="team-stack-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Team</th>
+                                            <th>Proj Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div class="stack-size-table" id="stack5">
+                                <h5>5-Player Stacks</h5>
+                                <table class="team-stack-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Team</th>
+                                            <th>Proj Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="results" class="tab-content">
+                <div class="results-summary">
+                    <h4>Team Totals</h4>
+                    <div id="teamTotals"></div>
+                </div>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Team</th>
+                            <th>Pos</th>
+                            <th>Salary</th>
+                            <th>Proj</th>
+                            <th>Stack</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div id="exposure" class="tab-content">
+                <!-- Exposure table will be dynamically added by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div id="statusMessage" class="status-message" style="display: none;"></div>
+
+    <script src="{{ url_for('static', filename='js/optimizer.js') }}"></script>
+</body>
+</html> 
