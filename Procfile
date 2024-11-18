@@ -1,1 +1,1 @@
-web: python smtes/app.py
+web: python smtes/smtes/app.py
